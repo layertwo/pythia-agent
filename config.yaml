@@ -1,0 +1,75 @@
+# Pythia Agent Configuration
+# Environment variables override these values using PYTHIA_ prefix
+# e.g., PYTHIA_MODEL_PROVIDER=openai, PYTHIA_OLLAMA_HOST=http://host:11434
+
+agent:
+  name: "Pythia"
+  system_prompt: |
+    You are Pythia, a self-hosted AI agent with persistent memory and autonomous capabilities.
+
+    Relevant memories from past conversations are automatically provided in <memory_context>
+    tags. Store things worth remembering: user preferences, project context, decisions made,
+    facts learned. Do not store transient information.
+
+    Be direct and concise. Do not narrate your actions or explain what you are about to do.
+    When given a task, use your tools to complete it without asking for permission.
+    For complex tasks, decompose the work into steps and execute them.
+    Use think for complex reasoning before acting, not for simple questions.
+    If you encounter an error, try a different approach before asking for help.
+    When scheduled jobs produce notable results, notify the user.
+
+# Model provider configuration
+# Supported: ollama, openai, anthropic, bedrock, litellm, llamaapi, mistral, google
+model:
+  provider: "ollama"
+  model_id: "llama3.1"
+
+# Provider-specific settings
+ollama:
+  host: "http://host.docker.internal:11434"
+
+openai:
+  model_id: "gpt-4o"
+  # api_key sourced from OPENAI_API_KEY env var
+
+anthropic:
+  model_id: "claude-sonnet-4-20250514"
+  # api_key sourced from ANTHROPIC_API_KEY env var
+
+bedrock:
+  model_id: "anthropic.claude-sonnet-4-20250514-v1:0"
+  region: "us-east-1"
+
+# Memory (mem0) configuration
+memory:
+  enabled: true
+  auto_inject: true
+  auto_inject_top_k: 5
+  auto_store: true
+
+  llm:
+    provider: "ollama"
+    model: "llama3.1"
+    ollama_base_url: "http://host.docker.internal:11434"
+    temperature: 0.1
+    max_tokens: 2000
+
+  embedder:
+    provider: "ollama"
+    model: "nomic-embed-text"
+    embedding_dims: 768
+    ollama_base_url: "http://host.docker.internal:11434"
+
+  vector_store:
+    provider: "pgvector"
+    collection_name: "pythia_memories"
+    host: "postgres"
+    port: 5432
+    user: "pythia"
+    password: "pythia"
+    dbname: "pythia"
+
+# Server configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
