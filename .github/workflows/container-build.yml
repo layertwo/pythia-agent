@@ -1,0 +1,68 @@
+name: Container build and release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "mainline" ]
+    paths:
+      - src/**
+      - Dockerfile
+      - pyproject.toml
+      - .github/workflows/container-build.yml
+  pull_request:
+    branches: [ "mainline" ]
+    paths:
+      - src/**
+      - Dockerfile
+      - pyproject.toml
+      - .github/workflows/container-build.yml
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/layertwo/pythia-agent
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+          contents: read
+          packages: write
+          id-token: write
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install cosign
+      if: github.event_name != 'pull_request'
+      uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+      with:
+        cosign-release: 'v2.1.1'
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+    - name: Log into registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      id: build-and-push
+      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+      with:
+        context: .
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ghcr.io/layertwo/pythia-agent:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Sign the published Docker image
+      if: github.event_name != 'pull_request'
+      env:
+        TAGS: ghcr.io/layertwo/pythia-agent:latest
+        DIGEST: ${{ steps.build-and-push.outputs.digest }}
+      run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
