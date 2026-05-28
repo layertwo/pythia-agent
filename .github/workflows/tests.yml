@@ -19,6 +19,9 @@ on:
       - uv.lock
       - .github/workflows/tests.yml
 
+permissions:
+  contents: read
+
 jobs:
 
   test:
