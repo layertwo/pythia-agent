@@ -35,24 +35,6 @@ def test_telegram_success(notif_plugin, monkeypatch):
     assert "fake-token" in call_kwargs[0][0]
 
 
-def test_slack_missing_env(notif_plugin, monkeypatch):
-    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
-    result = notif_plugin.notify_slack(message="test")
-    assert "SLACK_WEBHOOK_URL" in result
-
-
-def test_slack_success(notif_plugin, monkeypatch):
-    monkeypatch.setenv("SLACK_WEBHOOK_URL", "https://hooks.slack.com/test")
-
-    mock_resp = MagicMock()
-    mock_resp.raise_for_status = MagicMock()
-
-    with patch("pythia_agent.plugins.notifications.requests.post", return_value=mock_resp):
-        result = notif_plugin.notify_slack(message="hello")
-
-    assert "sent" in result.lower()
-
-
 def test_webhook_missing_url(notif_plugin, monkeypatch):
     monkeypatch.delenv("NOTIFICATION_WEBHOOK_URL", raising=False)
     result = notif_plugin.notify_webhook(message="test")

@@ -1,4 +1,7 @@
-"""Notification plugin: multi-channel alerts (Telegram, Slack webhook, generic webhook)."""
+"""Notification plugin: multi-channel alerts (Telegram, generic webhook).
+
+Slack is supported via `notify_webhook` using a Slack incoming-webhook URL.
+"""
 
 import logging
 
