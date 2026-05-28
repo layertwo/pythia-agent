@@ -6,36 +6,30 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
-    "strands-agents[ollama]",
-    "mem0ai",
-    "fastapi",
-    "uvicorn[standard]",
-    "pydantic>=2.0",
-    "pydantic-settings",
-    "pyyaml",
-    "sqlalchemy>=2.0",
-    "psycopg2-binary",
-    "requests",
-    "feedparser",
-    "croniter",
+    "strands-agents==1.41.0",
+    "mem0ai==2.0.4",
+    "fastapi==0.136.3",
+    "uvicorn[standard]==0.48.0",
+    "pydantic==2.13.4",
+    "pydantic-settings==2.14.1",
+    "pyyaml==6.0.3",
+    "sqlalchemy==2.0.50",
+    "psycopg2-binary==2.9.12",
+    "requests==2.34.2",
+    "feedparser==6.0.12",
+    "croniter==6.2.2",
 ]
 
 [project.optional-dependencies]
-all-providers = [
-    "strands-agents[anthropic]",
-    "strands-agents[openai]",
-    "strands-agents[bedrock]",
-    "strands-agents[litellm]",
-]
 dev = [
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-    "httpx",
-    "ruff",
+    "pytest==9.0.3",
+    "pytest-asyncio==1.4.0",
+    "pytest-cov==7.1.0",
+    "httpx==0.28.1",
+    "ruff==0.15.14",
 ]
 search = [
-    "exa-py",
+    "exa-py==2.13.0",
 ]
 
 [build-system]
@@ -52,7 +46,6 @@ addopts = "--cov=pythia_agent --cov-report=term-missing --cov-report=html"
 
 [tool.coverage.run]
 source = ["src/pythia_agent"]
-omit = ["src/pythia_agent/__main__.py"]
 
 [tool.coverage.report]
 fail_under = 0
