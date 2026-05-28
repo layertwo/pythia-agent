@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Self-hosted Strands agent with mem0 persistent memory"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = [
     "strands-agents==1.41.0",
     "mem0ai==2.0.4",
@@ -21,15 +21,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+search = [
+    "exa-py==2.13.0",
+]
+
+[dependency-groups]
 dev = [
     "pytest==9.0.3",
     "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
     "httpx==0.28.1",
     "ruff==0.15.14",
-]
-search = [
-    "exa-py==2.13.0",
 ]
 
 [build-system]
@@ -58,4 +60,4 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py314"

@@ -1,13 +1,22 @@
-FROM python:3.11-slim-bookworm
+FROM python:3.14-slim-bookworm
+
+# Copy uv binary from the official image (faster than `pip install uv`)
+COPY --from=ghcr.io/astral-sh/uv:0.11.16 /uv /uvx /bin/
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir uv
+# Bytecompile installed packages and copy (not hardlink) into the image layer
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml uv.lock README.md ./
 COPY src/ ./src/
 
-RUN uv pip install --system -e "."
+# Reproducible, production install: no dev deps, no editable mode
+RUN uv sync --frozen --no-dev --no-editable
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 COPY config.yaml ./
 

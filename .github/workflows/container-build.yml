@@ -8,6 +8,7 @@ on:
       - src/**
       - Dockerfile
       - pyproject.toml
+      - uv.lock
       - .github/workflows/container-build.yml
   pull_request:
     branches: [ "mainline" ]
@@ -15,6 +16,7 @@ on:
       - src/**
       - Dockerfile
       - pyproject.toml
+      - uv.lock
       - .github/workflows/container-build.yml
 
 env:

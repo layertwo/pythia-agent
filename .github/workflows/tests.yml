@@ -1,0 +1,44 @@
+name: Unit tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "mainline" ]
+    paths:
+      - src/**
+      - tests/**
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/tests.yml
+  pull_request:
+    branches: [ "mainline" ]
+    paths:
+      - src/**
+      - tests/**
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/tests.yml
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        version: "0.11.16"
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Set up Python 3.14
+      run: uv python install 3.14
+
+    - name: Install dependencies
+      run: uv sync --frozen --all-extras --all-groups
+
+    - name: Run unit tests
+      run: uv run pytest
