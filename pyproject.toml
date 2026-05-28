@@ -44,7 +44,10 @@ packages = ["src/pythia_agent"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "--cov=pythia_agent --cov-report=term-missing --cov-report=html"
+markers = [
+    "integration: tests that require the docker compose stack (deselected by default)",
+]
+addopts = "--cov=pythia_agent --cov-report=term-missing --cov-report=html -m 'not integration'"
 
 [tool.coverage.run]
 source = ["src/pythia_agent"]
