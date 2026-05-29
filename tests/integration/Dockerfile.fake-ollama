@@ -1,0 +1,17 @@
+FROM python:3.14-slim-bookworm
+
+COPY --from=ghcr.io/astral-sh/uv:0.11.16 /uv /uvx /bin/
+
+WORKDIR /app
+
+# Install only the deps we need to run the stub (fastapi + uvicorn).
+# Pinned to match the main project's versions for consistency.
+RUN uv pip install --system --no-cache \
+    "fastapi==0.136.3" \
+    "uvicorn[standard]==0.48.0"
+
+COPY tests/integration/fake_ollama.py ./fake_ollama.py
+
+EXPOSE 11434
+
+CMD ["uvicorn", "fake_ollama:app", "--host", "0.0.0.0", "--port", "11434"]

@@ -3,7 +3,7 @@ from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 
 class AgentConfig(BaseModel):
@@ -73,21 +73,74 @@ class ServerConfig(BaseModel):
     port: int = 8080
 
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="PYTHIA_", env_nested_delimiter="__")
+class _YamlSource(PydanticBaseSettingsSource):
+    """Settings source that reads from a pre-loaded YAML dict.
 
-    agent: AgentConfig = Field(default_factory=AgentConfig)
-    model: ModelConfig = Field(default_factory=ModelConfig)
-    ollama: OllamaConfig = Field(default_factory=OllamaConfig)
-    openai: OpenAIConfig = Field(default_factory=OpenAIConfig)
-    anthropic: AnthropicConfig = Field(default_factory=AnthropicConfig)
-    bedrock: BedrockConfig = Field(default_factory=BedrockConfig)
-    memory: MemoryConfig = Field(default_factory=MemoryConfig)
-    server: ServerConfig = Field(default_factory=ServerConfig)
+    Sits below env-var sources in the priority chain, so env vars override it.
+    """
+
+    def __init__(self, settings_cls: type[BaseSettings], data: dict[str, Any]) -> None:
+        super().__init__(settings_cls)
+        self._data = data
+
+    def get_field_value(self, field: Any, field_name: str) -> tuple[Any, str, bool]:  # type: ignore[override]
+        value = self._data.get(field_name)
+        return value, field_name, value is not None
+
+    def field_is_complex(self, field: Any) -> bool:  # type: ignore[override]
+        # YAML data is already-parsed Python (dicts, lists, scalars); no string
+        # decoding needed. Returning False prevents pydantic-settings from trying
+        # to JSON-decode values that came in already typed.
+        return False
+
+    def __call__(self) -> dict[str, Any]:
+        return {k: v for k, v in self._data.items() if v is not None}
 
 
-def load_settings(config_path: str | Path | None = None) -> Settings:
-    """Load settings from config.yaml merged with environment variable overrides."""
+def _make_settings_class(yaml_data: dict[str, Any]) -> type[BaseSettings]:
+    """Return a Settings subclass whose lowest-priority source is *yaml_data*."""
+
+    class Settings(BaseSettings):
+        model_config = SettingsConfigDict(env_prefix="PYTHIA_", env_nested_delimiter="__")
+
+        agent: AgentConfig = Field(default_factory=AgentConfig)
+        model: ModelConfig = Field(default_factory=ModelConfig)
+        ollama: OllamaConfig = Field(default_factory=OllamaConfig)
+        openai: OpenAIConfig = Field(default_factory=OpenAIConfig)
+        anthropic: AnthropicConfig = Field(default_factory=AnthropicConfig)
+        bedrock: BedrockConfig = Field(default_factory=BedrockConfig)
+        memory: MemoryConfig = Field(default_factory=MemoryConfig)
+        server: ServerConfig = Field(default_factory=ServerConfig)
+
+        @classmethod
+        def settings_customise_sources(
+            cls,
+            settings_cls: type[BaseSettings],
+            init_settings: PydanticBaseSettingsSource,
+            env_settings: PydanticBaseSettingsSource,
+            dotenv_settings: PydanticBaseSettingsSource,
+            file_secret_settings: PydanticBaseSettingsSource,
+        ) -> tuple[PydanticBaseSettingsSource, ...]:
+            return (
+                init_settings,
+                env_settings,
+                dotenv_settings,
+                file_secret_settings,
+                _YamlSource(settings_cls, yaml_data),
+            )
+
+    return Settings
+
+
+# Public type alias — import this elsewhere in the codebase.
+Settings = _make_settings_class({})
+
+
+def load_settings(config_path: str | Path | None = None) -> Any:
+    """Load settings from config.yaml merged with environment variable overrides.
+
+    Environment variables always take priority over values in config.yaml.
+    """
     yaml_data: dict[str, Any] = {}
 
     if config_path is None:
@@ -102,4 +155,4 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         with open(config_path) as f:
             yaml_data = yaml.safe_load(f) or {}
 
-    return Settings(**yaml_data)
+    return _make_settings_class(yaml_data)()

@@ -6,7 +6,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
-    "strands-agents==1.41.0",
+    "strands-agents[ollama]==1.41.0",
     "mem0ai==2.0.4",
     "fastapi==0.136.3",
     "uvicorn[standard]==0.48.0",
@@ -44,7 +44,10 @@ packages = ["src/pythia_agent"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "--cov=pythia_agent --cov-report=term-missing --cov-report=html"
+markers = [
+    "integration: tests that require the docker compose stack (deselected by default)",
+]
+addopts = "--cov=pythia_agent --cov-report=term-missing --cov-report=html -m 'not integration'"
 
 [tool.coverage.run]
 source = ["src/pythia_agent"]

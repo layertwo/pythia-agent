@@ -1,0 +1,53 @@
+# Integration test stack. Brings up:
+# - pythia: the locally-built `pythia-agent:test` image
+# - postgres: pgvector-enabled Postgres (same as prod compose)
+# - fake-ollama: stubbed LLM + embedder
+#
+# Compose v2 (`docker compose up --wait` or `podman compose up --wait`)
+# blocks on all healthchecks.
+
+services:
+  pythia:
+    image: pythia-agent:test
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://pythia:pythia@postgres:5432/pythia
+      PYTHIA_MODEL__PROVIDER: ollama
+      PYTHIA_MODEL__MODEL_ID: llama3.1
+      PYTHIA_OLLAMA__HOST: http://fake-ollama:11434
+      PYTHIA_MEMORY__LLM__OLLAMA_BASE_URL: http://fake-ollama:11434
+      PYTHIA_MEMORY__EMBEDDER__OLLAMA_BASE_URL: http://fake-ollama:11434
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fake-ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8080/health\")'"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+      start_period: 10s
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: pythia
+      POSTGRES_PASSWORD: pythia
+      POSTGRES_DB: pythia
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pythia"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+  fake-ollama:
+    build:
+      context: ../..
+      dockerfile: tests/integration/Dockerfile.fake-ollama
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; r=urllib.request.Request(\"http://localhost:11434/api/embeddings\",data=b\"{\\\"model\\\":\\\"x\\\",\\\"prompt\\\":\\\"x\\\"}\",headers={\"Content-Type\":\"application/json\"}); urllib.request.urlopen(r)'"]
+      interval: 3s
+      timeout: 2s
+      retries: 10

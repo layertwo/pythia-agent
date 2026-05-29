@@ -80,6 +80,8 @@ class Mem0SessionManager(SessionManager):
                     "user": cfg.vector_store.user,
                     "password": cfg.vector_store.password,
                     "dbname": cfg.vector_store.dbname,
+                    # Must match embedder.embedding_dims; mem0's pgvector config defaults to 1536.
+                    "embedding_model_dims": cfg.embedder.embedding_dims,
                 },
             },
         }
