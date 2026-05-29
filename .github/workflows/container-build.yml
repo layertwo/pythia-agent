@@ -35,7 +35,17 @@ env:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
     steps:
     - uses: actions/checkout@v6
 
@@ -46,15 +56,17 @@ jobs:
       uses: docker/build-push-action@v7.2.0
       with:
         context: .
+        platforms: ${{ matrix.platform }}
         tags: pythia-agent:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=${{ matrix.arch }}
+        cache-to: type=gha,scope=${{ matrix.arch }},mode=max
         outputs: type=docker,dest=/tmp/pythia-image.tar
 
-    - name: Upload image artifact
+    - name: Upload amd64 image artifact for integration
+      if: matrix.arch == 'amd64'
       uses: actions/upload-artifact@v7
       with:
-        name: pythia-image
+        name: pythia-image-amd64
         path: /tmp/pythia-image.tar
         retention-days: 1
 
@@ -64,10 +76,10 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: Download image artifact
+    - name: Download amd64 image artifact
       uses: actions/download-artifact@v8
       with:
-        name: pythia-image
+        name: pythia-image-amd64
         path: /tmp
 
     - name: Load image into docker daemon
