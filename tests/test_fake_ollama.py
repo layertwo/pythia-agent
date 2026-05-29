@@ -1,5 +1,7 @@
 """Unit tests for the fake-Ollama HTTP stub used by integration tests."""
 
+import json
+
 from fastapi.testclient import TestClient
 
 from tests.integration.fake_ollama import app, EMBEDDING_DIMS
@@ -46,32 +48,41 @@ def test_chat_returns_canned_assistant_message():
     assert data["done"] is True
 
 
-def test_chat_fact_extraction_returns_json_facts():
-    """When the prompt looks like a mem0 fact-extraction prompt, return JSON."""
+def test_chat_fact_extraction_returns_memory_json():
+    """When the prompt looks like a mem0 2.0.4 extraction prompt, return memory JSON."""
     payload = {
         "model": "llama3.1",
         "messages": [
-            {"role": "system", "content": "You are a memory extraction assistant. Return JSON."},
-            {"role": "user", "content": "Extract facts from: my favorite color is blue"},
+            {"role": "system", "content": "You are a Memory Extractor. Return JSON."},
+            {"role": "user", "content": "## New Messages\nUser: my favorite color is blue\n# Output:"},
         ],
         "stream": False,
     }
     resp = client.post("/api/chat", json=payload)
     assert resp.status_code == 200
-    import json
     content = resp.json()["message"]["content"]
     parsed = json.loads(content)
-    assert "facts" in parsed
-    assert isinstance(parsed["facts"], list)
-    assert len(parsed["facts"]) >= 1
+    # mem0 2.0.4 expects {"memory": [{"id": "...", "text": "...", "event": "..."}]}
+    assert "memory" in parsed
+    assert isinstance(parsed["memory"], list)
+    assert len(parsed["memory"]) >= 1
+    assert "text" in parsed["memory"][0]
+    assert "event" in parsed["memory"][0]
 
 
-def test_chat_streaming_not_supported():
+def test_chat_streaming_returns_ndjson():
     payload = {
         "model": "llama3.1",
         "messages": [{"role": "user", "content": "hi"}],
         "stream": True,
     }
     resp = client.post("/api/chat", json=payload)
-    # Streaming returns 400 — we don't support it in the stub
-    assert resp.status_code == 400
+    assert resp.status_code == 200
+    # Response body is newline-delimited JSON; parse each non-empty line.
+    lines = [line for line in resp.text.splitlines() if line.strip()]
+    assert len(lines) >= 1
+    parsed = [json.loads(line) for line in lines]
+    # Last chunk must have done=True.
+    assert parsed[-1]["done"] is True
+    # All chunks must have a message dict with role.
+    assert all("message" in p for p in parsed)
