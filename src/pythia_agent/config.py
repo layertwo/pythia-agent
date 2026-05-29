@@ -88,7 +88,10 @@ class _YamlSource(PydanticBaseSettingsSource):
         return value, field_name, value is not None
 
     def field_is_complex(self, field: Any) -> bool:  # type: ignore[override]
-        return self.field_is_complex(field)
+        # YAML data is already-parsed Python (dicts, lists, scalars); no string
+        # decoding needed. Returning False prevents pydantic-settings from trying
+        # to JSON-decode values that came in already typed.
+        return False
 
     def __call__(self) -> dict[str, Any]:
         return {k: v for k, v in self._data.items() if v is not None}
