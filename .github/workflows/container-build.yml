@@ -35,7 +35,17 @@ env:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
     steps:
     - uses: actions/checkout@v6
 
@@ -46,15 +56,17 @@ jobs:
       uses: docker/build-push-action@v7.2.0
       with:
         context: .
+        platforms: ${{ matrix.platform }}
         tags: pythia-agent:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=${{ matrix.arch }}
+        cache-to: type=gha,scope=${{ matrix.arch }},mode=max
         outputs: type=docker,dest=/tmp/pythia-image.tar
 
-    - name: Upload image artifact
+    - name: Upload amd64 image artifact for integration
+      if: matrix.arch == 'amd64'
       uses: actions/upload-artifact@v7
       with:
-        name: pythia-image
+        name: pythia-image-amd64
         path: /tmp/pythia-image.tar
         retention-days: 1
 
@@ -64,10 +76,10 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: Download image artifact
+    - name: Download amd64 image artifact
       uses: actions/download-artifact@v8
       with:
-        name: pythia-image
+        name: pythia-image-amd64
         path: /tmp
 
     - name: Load image into docker daemon
@@ -103,8 +115,61 @@ jobs:
   publish:
     needs: integration
     if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4.1.0
+
+    - name: Log into registry
+      uses: docker/login-action@v4.2.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push by digest
+      id: build
+      uses: docker/build-push-action@v7.2.0
+      with:
+        context: .
+        platforms: ${{ matrix.platform }}
+        outputs: type=image,name=ghcr.io/layertwo/pythia-agent,push-by-digest=true,name-canonical=true,push=true
+        cache-from: type=gha,scope=${{ matrix.arch }}
+
+    - name: Export digest as artifact filename
+      run: |
+        mkdir -p /tmp/digests
+        digest="${{ steps.build.outputs.digest }}"
+        touch "/tmp/digests/${digest#sha256:}"
+
+    - name: Upload digest artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: digests-${{ matrix.arch }}
+        path: /tmp/digests/*
+        retention-days: 1
+
+  merge:
+    needs: publish
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       packages: write
       id-token: write
     steps:
@@ -123,17 +188,23 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push Docker image
-      id: build-and-push
-      uses: docker/build-push-action@v7.2.0
+    - name: Download all digest artifacts
+      uses: actions/download-artifact@v8
       with:
-        context: .
-        push: true
-        tags: ghcr.io/layertwo/pythia-agent:latest
-        cache-from: type=gha
+        pattern: digests-*
+        path: /tmp/digests
+        merge-multiple: true
 
-    - name: Sign the published Docker image
-      env:
-        TAGS: ghcr.io/layertwo/pythia-agent:latest
-        DIGEST: ${{ steps.build-and-push.outputs.digest }}
-      run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+    - name: Create multi-arch manifest list and capture digest
+      id: manifest
+      working-directory: /tmp/digests
+      run: |
+        docker buildx imagetools create \
+          --metadata-file /tmp/metadata.json \
+          -t ghcr.io/layertwo/pythia-agent:latest \
+          $(printf 'ghcr.io/layertwo/pythia-agent@sha256:%s ' *)
+        digest=$(jq -r '."containerimage.descriptor".digest' /tmp/metadata.json)
+        echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+    - name: Sign the manifest list
+      run: cosign sign --yes "ghcr.io/layertwo/pythia-agent@${{ steps.manifest.outputs.digest }}"
