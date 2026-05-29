@@ -115,15 +115,22 @@ jobs:
   publish:
     needs: integration
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
     permissions:
+      contents: read
       packages: write
-      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
     steps:
     - uses: actions/checkout@v6
-
-    - name: Install cosign
-      uses: sigstore/cosign-installer@v4.1.2
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v4.1.0
@@ -135,17 +142,24 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push Docker image
-      id: build-and-push
+    - name: Build and push by digest
+      id: build
       uses: docker/build-push-action@v7.2.0
       with:
         context: .
-        push: true
-        tags: ghcr.io/layertwo/pythia-agent:latest
-        cache-from: type=gha
+        platforms: ${{ matrix.platform }}
+        outputs: type=image,name=ghcr.io/layertwo/pythia-agent,push-by-digest=true,name-canonical=true,push=true
+        cache-from: type=gha,scope=${{ matrix.arch }}
 
-    - name: Sign the published Docker image
-      env:
-        TAGS: ghcr.io/layertwo/pythia-agent:latest
-        DIGEST: ${{ steps.build-and-push.outputs.digest }}
-      run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+    - name: Export digest as artifact filename
+      run: |
+        mkdir -p /tmp/digests
+        digest="${{ steps.build.outputs.digest }}"
+        touch "/tmp/digests/${digest#sha256:}"
+
+    - name: Upload digest artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: digests-${{ matrix.arch }}
+        path: /tmp/digests/*
+        retention-days: 1
