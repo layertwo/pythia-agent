@@ -6,6 +6,7 @@ on:
     branches: [ "mainline" ]
     paths:
       - src/**
+      - tests/integration/**
       - Dockerfile
       - pyproject.toml
       - uv.lock
@@ -14,10 +15,18 @@ on:
     branches: [ "mainline" ]
     paths:
       - src/**
+      - tests/integration/**
       - Dockerfile
       - pyproject.toml
       - uv.lock
       - .github/workflows/container-build.yml
+
+concurrency:
+  group: container-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   REGISTRY: ghcr.io
@@ -26,24 +35,88 @@ env:
 jobs:
 
   build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4.1.0
+
+    - name: Build pythia image to tarball
+      uses: docker/build-push-action@v7.2.0
+      with:
+        context: .
+        tags: pythia-agent:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        outputs: type=docker,dest=/tmp/pythia-image.tar
+
+    - name: Upload image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: pythia-image
+        path: /tmp/pythia-image.tar
+        retention-days: 1
+
+  integration:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Download image artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: pythia-image
+        path: /tmp
+
+    - name: Load image into docker daemon
+      run: docker load -i /tmp/pythia-image.tar
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v8.1.0
+      with:
+        version: "0.11.16"
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Set up Python 3.14
+      run: uv python install 3.14
+
+    - name: Install dependencies
+      run: uv sync --frozen --all-extras --all-groups
+
+    - name: Start stack
+      run: docker compose -f tests/integration/compose.yaml up -d --wait
+
+    - name: Run integration tests
+      run: uv run pytest tests/integration/ -m integration --no-cov -v
+
+    - name: Dump container logs on failure
+      if: failure()
+      run: docker compose -f tests/integration/compose.yaml logs
+
+    - name: Tear down
+      if: always()
+      run: docker compose -f tests/integration/compose.yaml down -v
+
+  publish:
+    needs: integration
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-          contents: read
-          packages: write
-          id-token: write
+      packages: write
+      id-token: write
     steps:
     - uses: actions/checkout@v6
 
     - name: Install cosign
-      if: github.event_name != 'pull_request'
       uses: sigstore/cosign-installer@v4.1.2
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v4.1.0
 
     - name: Log into registry
-      if: github.event_name != 'pull_request'
       uses: docker/login-action@v4.2.0
       with:
         registry: ghcr.io
@@ -55,13 +128,11 @@ jobs:
       uses: docker/build-push-action@v7.2.0
       with:
         context: .
-        push: ${{ github.event_name != 'pull_request' }}
+        push: true
         tags: ghcr.io/layertwo/pythia-agent:latest
         cache-from: type=gha
-        cache-to: type=gha,mode=max
 
     - name: Sign the published Docker image
-      if: github.event_name != 'pull_request'
       env:
         TAGS: ghcr.io/layertwo/pythia-agent:latest
         DIGEST: ${{ steps.build-and-push.outputs.digest }}
