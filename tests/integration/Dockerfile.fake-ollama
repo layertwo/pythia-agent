@@ -1,14 +1,23 @@
-FROM python:3.14-slim-bookworm
+FROM python:3.14-slim-trixie AS builder
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.16 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.17 /uv /uvx /bin/
+
+# Build a venv with only the stub's runtime deps. No [standard] extras: the
+# stub doesn't need uvloop/httptools/websockets/watchfiles.
+# Pinned to match the main project's versions for consistency.
+RUN uv venv /app/.venv \
+    && VIRTUAL_ENV=/app/.venv uv pip install --no-cache \
+        "fastapi==0.136.3" \
+        "uvicorn==0.48.0"
+
+
+FROM python:3.14-slim-trixie
 
 WORKDIR /app
 
-# Install only the deps we need to run the stub (fastapi + uvicorn).
-# Pinned to match the main project's versions for consistency.
-RUN uv pip install --system --no-cache \
-    "fastapi==0.136.3" \
-    "uvicorn[standard]==0.48.0"
+# Only the built venv crosses over — no uv binary, no build tooling.
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 COPY tests/integration/fake_ollama.py ./fake_ollama.py
 
