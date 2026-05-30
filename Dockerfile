@@ -1,7 +1,7 @@
 FROM python:3.14-slim-bookworm
 
 # Copy uv binary from the official image (faster than `pip install uv`)
-COPY --from=ghcr.io/astral-sh/uv:0.11.16 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.17 /uv /uvx /bin/
 
 WORKDIR /app
 
