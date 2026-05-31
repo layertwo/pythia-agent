@@ -24,7 +24,7 @@ from pydantic import BaseModel
 
 EMBEDDING_DIMS = 768
 # Models advertised to any caller that checks /api/tags before embedding/chatting.
-FAKE_MODELS = ["nomic-embed-text", "llama3.1"]
+FAKE_MODELS = ["nomic-embed-text", "nomic-embed-text-v2-moe", "llama3.1"]
 
 app = FastAPI(title="fake-ollama")
 

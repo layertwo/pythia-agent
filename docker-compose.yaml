@@ -9,6 +9,16 @@ services:
       - DATABASE_URL=postgresql://pythia:pythia@postgres:5432/pythia
       - PYTHIA_MODEL__PROVIDER=${PYTHIA_MODEL_PROVIDER:-ollama}
       - PYTHIA_MODEL__MODEL_ID=${PYTHIA_MODEL_ID:-llama3.1}
+      # Ollama Cloud: set OLLAMA_API_KEY and point the hosts at https://ollama.com.
+      # The ollama python client reads OLLAMA_API_KEY and adds the Bearer header
+      # automatically, so Strands' OllamaModel and mem0's OllamaLLM both authenticate.
+      # Embeddings stay local — Ollama Cloud doesn't host embedding models.
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY:-}
+      - PYTHIA_OLLAMA__HOST=${PYTHIA_OLLAMA_HOST:-http://host.docker.internal:11434}
+      - PYTHIA_MEMORY__LLM__OLLAMA_BASE_URL=${PYTHIA_MEMORY_LLM_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - PYTHIA_MEMORY__LLM__MODEL=${PYTHIA_MEMORY_LLM_MODEL:-llama3.1}
+      - PYTHIA_MEMORY__EMBEDDER__OLLAMA_BASE_URL=${PYTHIA_MEMORY_EMBEDDER_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - PYTHIA_MEMORY__EMBEDDER__MODEL=${PYTHIA_MEMORY_EMBEDDER_MODEL:-nomic-embed-text-v2-moe}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
@@ -22,6 +32,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    extra_hosts:
+      # Lets the container reach a local Ollama on the host (used by the embedder
+      # by default, and by the agent/memory LLMs unless pointed at Ollama Cloud).
+      # macOS Docker/Podman auto-resolves this; Linux runtimes need this entry.
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   postgres:
