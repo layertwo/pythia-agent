@@ -10,6 +10,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from pythia_agent.agent import PythiaAgent
 from pythia_agent.environment import ServiceProvider
+from pythia_agent.memory import Mem0SessionManager
 from pythia_agent.utils import utc_now
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,9 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        # Drain pending background memory writes before tearing down the
+        # service provider so the last turn's memory always persists.
+        Mem0SessionManager.shutdown_writes()
         _provider.shutdown()
         logger.info("Service provider shut down")
 

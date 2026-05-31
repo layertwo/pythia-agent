@@ -62,6 +62,7 @@ class MemoryConfig(BaseModel):
     enabled: bool = True
     auto_inject: bool = True
     auto_inject_top_k: int = 5
+    auto_inject_min_score: float = 0.5
     auto_store: bool = True
     llm: MemoryLLMConfig = Field(default_factory=MemoryLLMConfig)
     embedder: MemoryEmbedderConfig = Field(default_factory=MemoryEmbedderConfig)
