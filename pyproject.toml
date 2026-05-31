@@ -7,7 +7,11 @@ license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
     "strands-agents[ollama]==1.41.0",
-    "mem0ai==2.0.4",
+    "mem0ai[nlp]==2.0.4",
+    # spaCy English model used by mem0 for lemmatization (BM25) and entity
+    # extraction. Pinned to track the spaCy version pulled in transitively
+    # via mem0ai[nlp]; bump together if either changes.
+    "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     "fastapi==0.136.3",
     "uvicorn[standard]==0.48.0",
     "pydantic==2.13.4",
@@ -37,6 +41,10 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+# Required because en_core_web_sm is declared via a direct URL in dependencies.
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pythia_agent"]
