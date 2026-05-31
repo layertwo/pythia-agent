@@ -6,6 +6,7 @@ from typing import Any
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from sse_starlette.sse import EventSourceResponse
 
 from pythia_agent.agent import PythiaAgent
 from pythia_agent.environment import ServiceProvider
@@ -88,6 +89,24 @@ async def chat(request: ChatRequest) -> ChatResponse:
     except Exception as e:
         logger.exception("Agent invocation failed")
         raise HTTPException(status_code=500, detail=f"Agent error: {str(e)}")
+
+
+@app.post("/chat/stream")
+async def chat_stream(request: ChatRequest) -> EventSourceResponse:
+    async def event_gen():
+        try:
+            # Resolve the agent inside the generator so creation errors
+            # (memory init, model factory) surface as an SSE `error` event
+            # instead of a 500 with an HTML/traceback body.
+            agent = _get_agent(request.user_id)
+            async for chunk in agent.stream(request.prompt):
+                yield {"event": "delta", "data": chunk}
+            yield {"event": "done", "data": ""}
+        except Exception as e:
+            logger.exception("Agent stream failed")
+            yield {"event": "error", "data": str(e)}
+
+    return EventSourceResponse(event_gen())
 
 
 @app.post("/memory/search")

@@ -1,4 +1,5 @@
 import logging
+from collections.abc import AsyncIterator
 
 from strands import Agent
 
@@ -42,3 +43,10 @@ class PythiaAgent:
             if isinstance(block, dict) and "text" in block
         )
         return {"response": text}
+
+    async def stream(self, message: str) -> AsyncIterator[str]:
+        """Yield text chunks from the model as they're generated."""
+        async for event in self.agent.stream_async(message):
+            data = event.get("data") if isinstance(event, dict) else None
+            if isinstance(data, str) and data:
+                yield data
