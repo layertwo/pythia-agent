@@ -13,9 +13,16 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 
 COPY pyproject.toml uv.lock README.md ./
+
+# Install third-party deps first against just the lockfile so this layer
+# stays cached across pure src/ changes. --no-install-project skips
+# building our own package (which needs src/ to be present).
+RUN uv sync --frozen --no-dev --no-editable --no-install-project
+
 COPY src/ ./src/
 
-# Reproducible, production install: no dev deps, no editable mode
+# Final sync builds + installs the project itself. Cheap because every
+# dependency is already present from the layer above.
 RUN uv sync --frozen --no-dev --no-editable
 
 
