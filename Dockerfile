@@ -28,6 +28,13 @@ RUN uv sync --frozen --no-dev --no-editable
 
 FROM python:3.14-slim-trixie AS runtime
 
+# OCI labels — picked up on per-arch images. GHCR's package page reads
+# org.opencontainers.image.description from the multi-arch index, set in
+# the merge job via `docker buildx imagetools create --annotation`.
+LABEL org.opencontainers.image.source="https://github.com/layertwo/pythia-agent"
+LABEL org.opencontainers.image.description="Self-hosted AI agent built on Strands Agents SDK with persistent memory via mem0 and PostgreSQL (pgvector)."
+LABEL org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
 
 # Only the built venv crosses over — no uv binary, no build tooling.
