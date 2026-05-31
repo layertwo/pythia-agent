@@ -198,9 +198,16 @@ jobs:
     - name: Create multi-arch manifest list and capture digest
       id: manifest
       working-directory: /tmp/digests
+      # `--annotation index:...` writes OCI annotations on the index itself
+      # (the multi-arch manifest list). GHCR reads image.description from
+      # there to populate the package page; the LABEL in Dockerfile only
+      # affects per-arch images and isn't picked up by GHCR's package UI.
       run: |
         docker buildx imagetools create \
           --metadata-file /tmp/metadata.json \
+          --annotation 'index:org.opencontainers.image.source=https://github.com/layertwo/pythia-agent' \
+          --annotation 'index:org.opencontainers.image.description=Self-hosted AI agent built on Strands Agents SDK with persistent memory via mem0 and PostgreSQL (pgvector).' \
+          --annotation 'index:org.opencontainers.image.licenses=MIT' \
           -t ghcr.io/layertwo/pythia-agent:latest \
           $(printf 'ghcr.io/layertwo/pythia-agent@sha256:%s ' *)
         digest=$(jq -r '."containerimage.descriptor".digest' /tmp/metadata.json)
