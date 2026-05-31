@@ -45,7 +45,12 @@ def test_agent_init_with_memory(mock_model):
 
 def test_agent_invoke(mock_model):
     mock_result = MagicMock()
-    mock_result.message = "Agent says hello"
+    # Strands returns message as a dict with content blocks; invoke()
+    # joins text from any blocks that have a "text" key.
+    mock_result.message = {
+        "role": "assistant",
+        "content": [{"text": "Agent says hello"}],
+    }
 
     mock_strands = MagicMock()
     mock_strands.return_value = mock_result

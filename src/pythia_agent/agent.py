@@ -35,6 +35,10 @@ class PythiaAgent:
 
     def invoke(self, message: str) -> dict:
         result = self.agent(message)
-        return {
-            "response": str(result.message),
-        }
+        msg = result.message or {}
+        text = "".join(
+            block.get("text", "")
+            for block in msg.get("content", [])
+            if isinstance(block, dict) and "text" in block
+        )
+        return {"response": text}
