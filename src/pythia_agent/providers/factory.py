@@ -27,9 +27,9 @@ class ModelFactory:
         return method()
 
     def _create_ollama(self):
-        from strands.models.ollama import OllamaModel
+        from pythia_agent.providers.pooled_ollama import PooledOllamaModel
 
-        return OllamaModel(
+        return PooledOllamaModel(
             host=self.settings.ollama.host,
             model_id=self.settings.model.model_id,
         )

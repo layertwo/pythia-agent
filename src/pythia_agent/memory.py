@@ -8,7 +8,9 @@ Follows the same architectural pattern as AgentCoreMemorySessionManager:
 
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 from mem0 import Memory
 from strands import tool
@@ -36,22 +38,40 @@ class Mem0SessionManager(SessionManager):
     - Expose explicit memory tools (remember/recall/forget/list_memories) for agent use
     """
 
+    # Single-worker executor shared across all session managers so writes
+    # serialize globally. mem0's Memory.add touches an SQLite history DB and
+    # has no internal locking; serializing avoids "database is locked" and
+    # gives us a clean drain point on shutdown.
+    _executor: ClassVar[ThreadPoolExecutor] = ThreadPoolExecutor(
+        max_workers=1, thread_name_prefix="mem0-write"
+    )
+
     def __init__(self, config: MemoryConfig, user_id: str = "default"):
         self.config = config
         self.user_id = user_id
         self._client: Optional[Memory] = None
+        self._client_lock = threading.Lock()
 
     @property
     def client(self) -> Memory:
+        # Double-checked locking: the background-write thread and the
+        # foreground asyncio search/auto-inject path can race on first access.
         if self._client is None:
-            self._client = Memory.from_config(self._build_mem0_config())
-            logger.info(
-                "mem0 client initialized (llm=%s, embedder=%s, vector_store=%s)",
-                self.config.llm.provider,
-                self.config.embedder.provider,
-                self.config.vector_store.provider,
-            )
+            with self._client_lock:
+                if self._client is None:
+                    self._client = Memory.from_config(self._build_mem0_config())
+                    logger.info(
+                        "mem0 client initialized (llm=%s, embedder=%s, vector_store=%s)",
+                        self.config.llm.provider,
+                        self.config.embedder.provider,
+                        self.config.vector_store.provider,
+                    )
         return self._client
+
+    @classmethod
+    def shutdown_writes(cls) -> None:
+        """Drain pending background memory writes. Called from app shutdown."""
+        cls._executor.shutdown(wait=True)
 
     def _build_mem0_config(self) -> dict[str, Any]:
         cfg = self.config
@@ -135,7 +155,11 @@ class Mem0SessionManager(SessionManager):
             return
 
         user_query = content[-1]["text"]
-        memories = self.search(user_query, top_k=self.config.auto_inject_top_k)
+        memories = self.search(
+            user_query,
+            top_k=self.config.auto_inject_top_k,
+            min_score=self.config.auto_inject_min_score,
+        )
 
         if not memories:
             return
@@ -168,16 +192,34 @@ class Mem0SessionManager(SessionManager):
                     break
 
         if conversation:
+            self._executor.submit(self._store_in_background, conversation)
+
+    def _store_in_background(self, conversation: list[dict]) -> None:
+        try:
             self.add(conversation)
             logger.debug("Stored %d messages as memories", len(conversation))
+        except Exception:
+            logger.exception("Background memory store failed")
 
     # ------------------------------------------------------------------
     # Memory operations
     # ------------------------------------------------------------------
 
-    def search(self, query: str, top_k: int | None = None) -> list[dict]:
+    def search(
+        self,
+        query: str,
+        top_k: int | None = None,
+        min_score: float | None = None,
+    ) -> list[dict]:
         k = top_k or self.config.auto_inject_top_k
-        results = self.client.search(query=query, filters={"user_id": self.user_id}, top_k=k)
+        kwargs: dict[str, Any] = {
+            "query": query,
+            "filters": {"user_id": self.user_id},
+            "top_k": k,
+        }
+        if min_score is not None:
+            kwargs["threshold"] = min_score
+        results = self.client.search(**kwargs)
         return results.get("results", [])
 
     def add(self, messages: list[dict], metadata: dict | None = None) -> dict:
