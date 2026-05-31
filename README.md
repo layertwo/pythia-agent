@@ -17,7 +17,7 @@ Self-hosted AI agent built on [Strands Agents SDK](https://strandsagents.com) wi
 ```bash
 # Ensure Ollama is running on host with required models
 ollama pull llama3.1
-ollama pull nomic-embed-text
+ollama pull nomic-embed-text-v2-moe
 
 # Start the full stack (pythia + postgres)
 docker compose up --build
@@ -25,10 +25,15 @@ docker compose up --build
 # Test health
 curl http://localhost:8080/health
 
-# Chat with the agent
+# Chat with the agent (waits for full response)
 curl -X POST http://localhost:8080/chat \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hello! My name is Lucas and I like Python.", "user_id": "lucas"}'
+
+# Stream tokens as they're generated (SSE)
+curl -N -X POST http://localhost:8080/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Tell me a short story", "user_id": "lucas"}'
 
 # Search memories
 curl -X POST http://localhost:8080/memory/search \
@@ -55,18 +60,46 @@ PYTHIA_MODEL_PROVIDER=anthropic ANTHROPIC_API_KEY=sk-ant-... docker compose up -
 
 ### Ollama Setup
 
-The default config expects Ollama running on the host. From inside Docker, it connects via `host.docker.internal:11434`.
+The default config expects Ollama running on the host. From inside Docker, it connects via `host.docker.internal:11434` (auto-resolved on macOS; the compose file adds a `host-gateway` mapping for Linux runtimes).
 
 ```bash
 ollama pull llama3.1
-ollama pull nomic-embed-text
+ollama pull nomic-embed-text-v2-moe
 ```
+
+### Ollama Cloud
+
+Point the agent and memory LLMs at [Ollama Cloud](https://docs.ollama.com/cloud) by exporting an API key plus the cloud host. The `ollama` python client reads `OLLAMA_API_KEY` automatically and adds the `Authorization: Bearer` header, so no code changes are needed.
+
+```bash
+export OLLAMA_API_KEY=...                                  # required
+export PYTHIA_OLLAMA_HOST=https://ollama.com               # agent -> cloud
+export PYTHIA_MODEL_ID=gpt-oss:120b-cloud                  # see ollama.com/search?c=cloud
+export PYTHIA_MEMORY_LLM_OLLAMA_BASE_URL=https://ollama.com  # mem0 LLM -> cloud
+export PYTHIA_MEMORY_LLM_MODEL=gpt-oss:120b-cloud
+
+docker compose up -d
+```
+
+The **embedder stays local** — Ollama Cloud does not host embedding models. Defaults in `docker-compose.yaml` keep `PYTHIA_MEMORY_EMBEDDER_*` pointed at `host.docker.internal:11434` with `nomic-embed-text-v2-moe`.
+
+### Memory tuning
+
+Auto-injected memories are filtered by similarity score so irrelevant matches don't bloat prompts.
+
+```bash
+PYTHIA_MEMORY__AUTO_INJECT_MIN_SCORE=0.7   # stricter (only close matches)
+PYTHIA_MEMORY__AUTO_INJECT_MIN_SCORE=0.3   # looser (more associative recall)
+```
+
+Default is `0.5`. Note the **double underscore** — env vars for nested config fields use `__`.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/chat` | Send a message, get a response |
+| POST | `/chat` | Send a message, get the full response when the agent loop completes |
+| POST | `/chat/stream` | Same input as `/chat`; returns `text/event-stream` with `delta` / `done` / `error` events |
 | POST | `/memory/search` | Search memories for a user |
 | GET | `/memory/{user_id}` | Get all memories for a user |
 | GET | `/memory/{user_id}/{memory_id}` | Get a specific memory |
@@ -130,7 +163,8 @@ pythia-agent/
 │   │   ├── tasks.py          # In-session task decomposition
 │   │   └── web_tools.py      # HTTP, Exa, Tavily, RSS
 │   └── providers/
-│       └── factory.py        # Model provider factory
+│       ├── factory.py        # Model provider factory
+│       └── pooled_ollama.py  # OllamaModel subclass with per-loop AsyncClient cache
 ├── tests/                    # pytest suite with coverage
 ├── config.yaml               # Default configuration
 ├── docker-compose.yaml       # Full stack: pythia + postgres (pgvector)
