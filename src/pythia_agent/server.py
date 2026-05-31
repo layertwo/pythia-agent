@@ -1,5 +1,6 @@
 import logging
 from collections import OrderedDict
+from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
@@ -59,19 +60,18 @@ def _get_session_manager(user_id: str):
     return agent.session_manager
 
 
-app = FastAPI(title=_provider.settings.agent.name, version="0.1.0")
-
-
-@app.on_event("startup")
-async def on_startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     _provider.start()
     logger.info("Service provider started")
+    try:
+        yield
+    finally:
+        _provider.shutdown()
+        logger.info("Service provider shut down")
 
 
-@app.on_event("shutdown")
-async def on_shutdown() -> None:
-    _provider.shutdown()
-    logger.info("Service provider shut down")
+app = FastAPI(title=_provider.settings.agent.name, version="0.1.0", lifespan=lifespan)
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -137,6 +137,7 @@ def main() -> None:
         host=_provider.settings.server.host,
         port=_provider.settings.server.port,
         reload=False,
+        ws="none",
     )
 
 
