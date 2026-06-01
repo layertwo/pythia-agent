@@ -6,7 +6,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
-    "strands-agents[ollama]==1.41.0",
+    "strands-agents[ollama]==1.42.0",
     "mem0ai[nlp]==2.0.4",
     # spaCy English model used by mem0 for lemmatization (BM25) and entity
     # extraction. Pinned to track the spaCy version pulled in transitively
