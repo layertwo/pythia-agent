@@ -162,9 +162,7 @@ class SystemToolsPlugin(Plugin):
         Args:
             expression: Mathematical expression to evaluate (e.g., '2 ** 10', 'sqrt(144)')
         """
-        allowed_names = {
-            k: v for k, v in math.__dict__.items() if not k.startswith("_")
-        }
+        allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
         allowed_names.update({"abs": abs, "round": round, "min": min, "max": max})
 
         try:

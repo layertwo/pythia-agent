@@ -3,6 +3,7 @@
 import logging
 import threading
 import time
+from datetime import datetime
 from typing import Callable
 
 from croniter import croniter
@@ -80,7 +81,11 @@ class SchedulerPlugin(Plugin):
             run_id = run.id
 
         try:
-            output = self._on_job_fire({"id": job_id, "name": name, "prompt": prompt}) if self._on_job_fire else "(no handler)"
+            output = (
+                self._on_job_fire({"id": job_id, "name": name, "prompt": prompt})
+                if self._on_job_fire
+                else "(no handler)"
+            )
             with get_session() as session:
                 run = session.get(JobRun, run_id)
                 run.status = "completed"

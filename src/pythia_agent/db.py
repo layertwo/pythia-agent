@@ -4,7 +4,17 @@ import logging
 import os
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, create_engine
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -31,7 +41,11 @@ class Job(Base):
     cron = Column(String, nullable=False)
     prompt = Column(Text, nullable=False)
     enabled = Column(Boolean, nullable=False, default=True)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
 
 class JobRun(Base):
@@ -39,7 +53,11 @@ class JobRun(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(String, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False)
-    started_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    started_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
     completed_at = Column(DateTime(timezone=True))
     status = Column(String, nullable=False, default="running")
     output = Column(Text)
@@ -54,8 +72,16 @@ class Goal(Base):
     current = Column(Float, nullable=False, default=0)
     unit = Column(String, nullable=False, default="")
     period = Column(String, nullable=False, default="")
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
 
 class Persona(Base):
@@ -67,8 +93,16 @@ class Persona(Base):
     description = Column(String, nullable=False, default="")
     skills = Column(JSONB, nullable=False, default=list)
     active = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
 
 # ------------------------------------------------------------------

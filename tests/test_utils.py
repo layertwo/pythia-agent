@@ -1,6 +1,5 @@
 """Tests for shared utilities."""
 
-import os
 from datetime import timezone
 
 from pythia_agent.utils import (

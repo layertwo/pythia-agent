@@ -1243,7 +1243,7 @@ requires-dist = [
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "requests", specifier = "==2.34.2" },
     { name = "sqlalchemy", specifier = "==2.0.50" },
-    { name = "strands-agents", extras = ["ollama"], specifier = "==1.42.0" },
+    { name = "strands-agents", extras = ["ollama"], specifier = "==1.44.0" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.48.0" },
 ]
 provides-extras = ["search"]
@@ -1655,7 +1655,7 @@ wheels = [
 
 [[package]]
 name = "strands-agents"
-version = "1.42.0"
+version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -1671,9 +1671,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/da/9e/8d577e0ff9ad0a15b368f43c61b7034f918b1c1b51ef17465d1a39a00403/strands_agents-1.42.0.tar.gz", hash = "sha256:39113d67d2fc3e5686f58c63ab71b68e458d578f9e6e0105e03b8a3960b97595", size = 872195, upload-time = "2026-06-01T18:38:22.243Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/4d/a1c8c0b870808877b9b82b9885294cddc7ec38fea5de5a941a80e11406b4/strands_agents-1.44.0.tar.gz", hash = "sha256:e876161bce6cc2a459356434746275be4e112cc1038a089adf3ee96e8a69b9d9", size = 1070256, upload-time = "2026-06-16T21:14:44.253Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/16/426f1f8c7d2678230b68755fcb3c0b8f59bc3a5591efe48343566b8e73c5/strands_agents-1.42.0-py3-none-any.whl", hash = "sha256:6cc04a32fc23a443a651d0e40198d946afc809888ae6fbc1fd07b2d5b6e354b3", size = 440999, upload-time = "2026-06-01T18:38:20.231Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/25/a01d4ab2ce9cb25c44ff84c692a38568d5b2f256b5b3b111fab30373978f/strands_agents-1.44.0-py3-none-any.whl", hash = "sha256:dfa59c7fb891f6079bc467ede12aeaefd2a2f455941267d60b9ddcdf716f8629", size = 568378, upload-time = "2026-06-16T21:14:42.294Z" },
 ]
 
 [package.optional-dependencies]

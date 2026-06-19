@@ -7,6 +7,7 @@ locator pattern leaking into business logic.
 
 import os
 from functools import cached_property
+from strands.agent.conversation_manager import SummarizingConversationManager
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -16,7 +17,6 @@ from pythia_agent.config import Settings, load_settings
 from pythia_agent.db import Base
 from pythia_agent.memory import Mem0SessionManager
 from pythia_agent.plugins.agent_tools import AgentToolsPlugin
-from pythia_agent.plugins.context import ContextPlugin
 from pythia_agent.plugins.goals import GoalsPlugin
 from pythia_agent.plugins.notifications import NotificationPlugin
 from pythia_agent.plugins.personas import PersonasPlugin
@@ -27,11 +27,9 @@ from pythia_agent.plugins.system_tools import SystemToolsPlugin
 from pythia_agent.plugins.tasks import TasksPlugin
 from pythia_agent.plugins.web_tools import WebToolsPlugin
 from pythia_agent.providers.factory import create_model
-import pythia_agent.models.session  # noqa: F401
 
 
 class ServiceProvider:
-
     def __init__(self, settings: Settings | None = None):
         self._settings = settings
 
@@ -108,10 +106,6 @@ class ServiceProvider:
         return SafetyPlugin()
 
     @cached_property
-    def context_plugin(self):
-        return ContextPlugin()
-
-    @cached_property
     def shared_plugins(self) -> list:
         return [
             self.system_tools_plugin,
@@ -123,8 +117,40 @@ class ServiceProvider:
             self.personas_plugin,
             self.tasks_plugin,
             self.safety_plugin,
-            self.context_plugin,
         ]
+
+    # ------------------------------------------------------------------
+    # Context window management (native, replaces the old ContextPlugin)
+    # ------------------------------------------------------------------
+
+    def create_conversation_manager(self):
+        """Build a fresh Strands conversation manager for context-window compression.
+
+        Maps the old ContextPlugin knobs onto SummarizingConversationManager:
+        pin_first <- protect_first_n, preserve_recent_messages <- protect_last_n.
+        Returns None when disabled so the agent falls back to Strands' default.
+
+        NOT cached: the manager holds per-conversation state (summary message,
+        removed-message count) and is registered as a hook on its agent, so each
+        per-user agent needs its own instance to avoid cross-user state bleed.
+        """
+        ctx = self.settings.context
+        if not ctx.enabled:
+            return None
+
+        return SummarizingConversationManager(
+            summary_ratio=ctx.summary_ratio,
+            preserve_recent_messages=ctx.preserve_recent_messages,
+            pin_first=ctx.pin_first,
+        )
+
+    @cached_property
+    def limits(self) -> dict | None:
+        """Per-invocation hard backstop dict, or None when disabled.
+
+        Safe to cache: a plain immutable dict shared read-only across agents.
+        """
+        return self.settings.limits.to_limits()
 
     # ------------------------------------------------------------------
     # Per-user factories
@@ -144,6 +170,8 @@ class ServiceProvider:
             system_prompt=self.settings.agent.system_prompt,
             plugins=[*self.shared_plugins, self.create_sessions_plugin(user_id)],
             session_manager=self.create_session_manager(user_id),
+            conversation_manager=self.create_conversation_manager(),
+            limits=self.limits,
         )
 
     # ------------------------------------------------------------------

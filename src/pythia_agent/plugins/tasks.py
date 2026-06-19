@@ -34,9 +34,7 @@ class Task:
 
     def __post_init__(self):
         if self.status not in VALID_STATUSES:
-            raise ValueError(
-                f"Invalid status '{self.status}'. Must be one of: {', '.join(sorted(VALID_STATUSES))}"
-            )
+            raise ValueError(f"Invalid status '{self.status}'. Must be one of: {', '.join(sorted(VALID_STATUSES))}")
 
 
 GUIDANCE = (

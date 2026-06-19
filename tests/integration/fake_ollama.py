@@ -77,12 +77,7 @@ def _looks_like_fact_extraction(messages: list[ChatMessage]) -> bool:
 @app.get("/api/tags")
 def tags() -> dict[str, Any]:
     """Return a model list so callers don't attempt to pull models."""
-    return {
-        "models": [
-            {"name": f"{m}:latest", "model": f"{m}:latest"}
-            for m in FAKE_MODELS
-        ]
-    }
+    return {"models": [{"name": f"{m}:latest", "model": f"{m}:latest"} for m in FAKE_MODELS]}
 
 
 @app.post("/api/embeddings")
@@ -113,9 +108,7 @@ def _chat_content(req: ChatRequest) -> str:
         last_user = next((m.content for m in reversed(req.messages) if m.role == "user"), "")
         # Use just the first 100 chars to keep the fact concise.
         fact_text = (last_user[:100] + "...") if len(last_user) > 100 else last_user
-        return json.dumps({
-            "memory": [{"id": "0", "text": fact_text, "event": "NONE"}]
-        })
+        return json.dumps({"memory": [{"id": "0", "text": fact_text, "event": "NONE"}]})
     return "Acknowledged."
 
 

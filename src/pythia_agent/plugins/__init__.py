@@ -8,7 +8,6 @@ from pythia_agent.plugins.personas import PersonasPlugin
 from pythia_agent.plugins.tasks import TasksPlugin
 from pythia_agent.plugins.safety import SafetyPlugin
 from pythia_agent.plugins.sessions import SessionsPlugin
-from pythia_agent.plugins.context import ContextPlugin
 
 __all__ = [
     "SystemToolsPlugin",
@@ -21,5 +20,4 @@ __all__ = [
     "TasksPlugin",
     "SafetyPlugin",
     "SessionsPlugin",
-    "ContextPlugin",
 ]
