@@ -78,7 +78,11 @@ class NotificationPlugin(Plugin):
             if err:
                 return "Error: no webhook URL provided and NOTIFICATION_WEBHOOK_URL not set"
 
-        payload = {"title": title, "message": message, "timestamp": utc_now().isoformat()}
+        payload = {
+            "title": title,
+            "message": message,
+            "timestamp": utc_now().isoformat(),
+        }
 
         try:
             resp = requests.post(url, json=payload, timeout=10)

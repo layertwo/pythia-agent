@@ -1,11 +1,8 @@
 """Agent tools plugin: think (deep reasoning), use_llm (sub-agent), stop, journal."""
 
-import json
 import logging
-import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 from strands import Agent, tool
 from strands.plugins import Plugin

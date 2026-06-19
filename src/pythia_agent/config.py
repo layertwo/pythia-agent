@@ -3,12 +3,18 @@ from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
-from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
 
 
 class AgentConfig(BaseModel):
     name: str = "Pythia"
-    system_prompt: str = "You are Pythia, a self-hosted AI agent with persistent memory and tool access. Be direct and concise."
+    system_prompt: str = (
+        "You are Pythia, a self-hosted AI agent with persistent memory and tool access. Be direct and concise."
+    )
 
 
 class ModelConfig(BaseModel):
@@ -69,6 +75,46 @@ class MemoryConfig(BaseModel):
     vector_store: MemoryVectorStoreConfig = Field(default_factory=MemoryVectorStoreConfig)
 
 
+class ContextConfig(BaseModel):
+    """Native conversation-window management (replaces the custom ContextPlugin).
+
+    Maps onto strands' SummarizingConversationManager:
+    - pin_first             <- the old protect_first_n (system prompt + setup)
+    - preserve_recent_messages <- the old protect_last_n (active work)
+    Summarization uses the agent's own model unless a separate one is wired in.
+    """
+
+    enabled: bool = True
+    pin_first: int = 3
+    preserve_recent_messages: int = 6
+    summary_ratio: float = 0.3
+
+
+class LimitsConfig(BaseModel):
+    """Per-invocation hard backstop passed to the Strands agent loop.
+
+    Complements (does not replace) SafetyPlugin's soft loop/repeat detection.
+    A breached limit stops the loop gracefully via stop_reason rather than raising.
+    Any field left as None is omitted from the limits dict sent to Strands.
+    """
+
+    enabled: bool = True
+    turns: int | None = 50
+    output_tokens: int | None = None
+    total_tokens: int | None = None
+
+    def to_limits(self) -> dict | None:
+        """Render to the Strands `limits` dict, or None when disabled/empty.
+
+        Omits unset fields so Strands receives only the caps actually set
+        (its Limits is a total=False TypedDict).
+        """
+        if not self.enabled:
+            return None
+        built = {k: v for k, v in self.model_dump(exclude={"enabled"}).items() if v is not None}
+        return built or None
+
+
 class ServerConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8080
@@ -111,6 +157,8 @@ def _make_settings_class(yaml_data: dict[str, Any]) -> type[BaseSettings]:
         anthropic: AnthropicConfig = Field(default_factory=AnthropicConfig)
         bedrock: BedrockConfig = Field(default_factory=BedrockConfig)
         memory: MemoryConfig = Field(default_factory=MemoryConfig)
+        context: ContextConfig = Field(default_factory=ContextConfig)
+        limits: LimitsConfig = Field(default_factory=LimitsConfig)
         server: ServerConfig = Field(default_factory=ServerConfig)
 
         @classmethod

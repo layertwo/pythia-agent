@@ -73,6 +73,24 @@ memory:
     password: "pythia"
     dbname: "pythia"
 
+# Context-window management (native Strands SummarizingConversationManager).
+# Replaces the old custom ContextPlugin. When enabled, long conversations are
+# summarized automatically while the first/last messages are protected.
+context:
+  enabled: true
+  pin_first: 3                 # protect the first N messages (system prompt + setup)
+  preserve_recent_messages: 6  # protect the last N messages (active work)
+  summary_ratio: 0.3           # fraction of compressible history to summarize per pass
+
+# Per-invocation hard backstop on the agent loop. Complements SafetyPlugin's
+# soft loop/repeat detection; a breached limit stops the loop gracefully.
+# Leave a field unset (null) to omit that cap.
+limits:
+  enabled: true
+  turns: 50            # max agent-loop iterations per invocation
+  output_tokens: null  # e.g. 8000 to cap generated tokens
+  total_tokens: null   # e.g. 120000 to cap total context+output tokens
+
 # Server configuration
 server:
   host: "0.0.0.0"

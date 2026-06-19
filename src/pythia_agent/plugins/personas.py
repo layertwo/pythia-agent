@@ -1,6 +1,5 @@
 """Personas plugin: manage agent personalities. PostgreSQL via SQLAlchemy."""
 
-import json
 import logging
 
 from sqlalchemy.exc import IntegrityError
@@ -50,13 +49,15 @@ class PersonasPlugin(Plugin):
 
         with get_session() as session:
             try:
-                session.add(Persona(
-                    slug=slug,
-                    name=name,
-                    system_prompt=system_prompt,
-                    description=description,
-                    skills=skill_list,
-                ))
+                session.add(
+                    Persona(
+                        slug=slug,
+                        name=name,
+                        system_prompt=system_prompt,
+                        description=description,
+                        skills=skill_list,
+                    )
+                )
                 session.commit()
             except IntegrityError:
                 session.rollback()

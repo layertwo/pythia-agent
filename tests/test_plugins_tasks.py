@@ -18,10 +18,12 @@ def test_get_tasks_empty(tasks_plugin):
 
 
 def test_update_tasks_replace(tasks_plugin):
-    tasks_json = json.dumps([
-        {"id": "t1", "content": "Do thing one", "status": "pending"},
-        {"id": "t2", "content": "Do thing two", "status": "in_progress"},
-    ])
+    tasks_json = json.dumps(
+        [
+            {"id": "t1", "content": "Do thing one", "status": "pending"},
+            {"id": "t2", "content": "Do thing two", "status": "in_progress"},
+        ]
+    )
     result = tasks_plugin.update_tasks(tasks=tasks_json, merge=False)
     assert "t1" in result
     assert "t2" in result
@@ -29,15 +31,19 @@ def test_update_tasks_replace(tasks_plugin):
 
 
 def test_update_tasks_merge(tasks_plugin):
-    initial = json.dumps([
-        {"id": "t1", "content": "First task", "status": "pending"},
-    ])
+    initial = json.dumps(
+        [
+            {"id": "t1", "content": "First task", "status": "pending"},
+        ]
+    )
     tasks_plugin.update_tasks(tasks=initial, merge=False)
 
-    update = json.dumps([
-        {"id": "t1", "content": "First task", "status": "completed"},
-        {"id": "t2", "content": "New task", "status": "pending"},
-    ])
+    update = json.dumps(
+        [
+            {"id": "t1", "content": "First task", "status": "completed"},
+            {"id": "t2", "content": "New task", "status": "pending"},
+        ]
+    )
     result = tasks_plugin.update_tasks(tasks=update, merge=True)
     assert "t1" in result
     assert "t2" in result
@@ -50,9 +56,11 @@ def test_update_tasks_invalid_json(tasks_plugin):
 
 
 def test_update_tasks_invalid_status(tasks_plugin):
-    tasks_json = json.dumps([
-        {"id": "t1", "content": "Task", "status": "invalid_status"},
-    ])
+    tasks_json = json.dumps(
+        [
+            {"id": "t1", "content": "Task", "status": "invalid_status"},
+        ]
+    )
     result = tasks_plugin.update_tasks(tasks=tasks_json, merge=False)
     assert "invalid" in result.lower() or "status" in result.lower() or "pending" in result.lower()
 

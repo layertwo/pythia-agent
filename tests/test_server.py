@@ -10,7 +10,13 @@ from fastapi.testclient import TestClient
 def client():
     """Create a test client with fully mocked provider."""
     with patch("pythia_agent.server._provider") as mock_provider:
-        from pythia_agent.config import AgentConfig, ModelConfig, MemoryConfig, ServerConfig, Settings
+        from pythia_agent.config import (
+            AgentConfig,
+            ModelConfig,
+            MemoryConfig,
+            ServerConfig,
+            Settings,
+        )
 
         mock_provider.settings = Settings(
             agent=AgentConfig(name="TestAgent", system_prompt="Test."),

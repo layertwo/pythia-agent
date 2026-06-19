@@ -88,10 +88,7 @@ class GoalsPlugin(Plugin):
             bar = "█" * min(bar_filled, 20) + "░" * (20 - min(bar_filled, 20))
             check = "✓" if g.current >= g.target else " "
             period_str = f" [{g.period}]" if g.period else ""
-            lines.append(
-                f"[{check}] {g.name}{period_str}\n"
-                f"    {bar} {g.current}/{g.target} {g.unit} ({pct:.0f}%)"
-            )
+            lines.append(f"[{check}] {g.name}{period_str}\n    {bar} {g.current}/{g.target} {g.unit} ({pct:.0f}%)")
         return "\n".join(lines)
 
     @tool

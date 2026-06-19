@@ -27,7 +27,7 @@ def parse_json_or_none(text: str) -> Any | None:
     """Parse JSON, returning None on failure."""
     try:
         return json.loads(text)
-    except (json.JSONDecodeError, TypeError):
+    except json.JSONDecodeError, TypeError:
         return None
 
 

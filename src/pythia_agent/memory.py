@@ -42,9 +42,7 @@ class Mem0SessionManager(SessionManager):
     # serialize globally. mem0's Memory.add touches an SQLite history DB and
     # has no internal locking; serializing avoids "database is locked" and
     # gives us a clean drain point on shutdown.
-    _executor: ClassVar[ThreadPoolExecutor] = ThreadPoolExecutor(
-        max_workers=1, thread_name_prefix="mem0-write"
-    )
+    _executor: ClassVar[ThreadPoolExecutor] = ThreadPoolExecutor(max_workers=1, thread_name_prefix="mem0-write")
 
     def __init__(self, config: MemoryConfig, user_id: str = "default"):
         self.config = config
@@ -169,9 +167,7 @@ class Mem0SessionManager(SessionManager):
             context_lines.append(mem.get("memory", ""))
 
         context_text = "\n".join(context_lines)
-        messages[-1]["content"].insert(
-            0, {"text": f"<{CONTEXT_TAG}>{context_text}</{CONTEXT_TAG}>"}
-        )
+        messages[-1]["content"].insert(0, {"text": f"<{CONTEXT_TAG}>{context_text}</{CONTEXT_TAG}>"})
         logger.info("Injected %d memories into user message", len(memories))
 
     def _on_after_invocation(self, event: AfterInvocationEvent) -> None:

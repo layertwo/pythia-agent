@@ -15,8 +15,16 @@ class ConversationSession(Base):
     id = Column(String, primary_key=True)  # UUID
     user_id = Column(String, nullable=False, index=True)
     title = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
     message_count = Column(Integer, nullable=False, default=0)
     status = Column(String, nullable=False, default="active")  # active / archived
 
@@ -35,4 +43,8 @@ class SessionMessage(Base):
     )
     role = Column(String, nullable=False)  # user / assistant / system
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )

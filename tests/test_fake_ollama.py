@@ -54,7 +54,10 @@ def test_chat_fact_extraction_returns_memory_json():
         "model": "llama3.1",
         "messages": [
             {"role": "system", "content": "You are a Memory Extractor. Return JSON."},
-            {"role": "user", "content": "## New Messages\nUser: my favorite color is blue\n# Output:"},
+            {
+                "role": "user",
+                "content": "## New Messages\nUser: my favorite color is blue\n# Output:",
+            },
         ],
         "stream": False,
     }

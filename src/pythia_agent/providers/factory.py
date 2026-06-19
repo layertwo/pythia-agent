@@ -17,13 +17,15 @@ class ModelFactory:
     def create(self):
         """Create and return a Strands model based on configured provider."""
         provider = self.settings.model.provider.lower()
-        logger.info("Creating model provider: %s (model_id=%s)", provider, self.settings.model.model_id)
+        logger.info(
+            "Creating model provider: %s (model_id=%s)",
+            provider,
+            self.settings.model.model_id,
+        )
 
         method = getattr(self, f"_create_{provider}", None)
         if method is None:
-            raise ValueError(
-                f"Unsupported model provider: '{provider}'. Supported: {', '.join(SUPPORTED_PROVIDERS)}"
-            )
+            raise ValueError(f"Unsupported model provider: '{provider}'. Supported: {', '.join(SUPPORTED_PROVIDERS)}")
         return method()
 
     def _create_ollama(self):

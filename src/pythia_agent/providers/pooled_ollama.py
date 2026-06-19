@@ -67,12 +67,36 @@ class PooledOllamaModel(OllamaModel):
         event = None
         async for event in response:
             for tool_call in event.message.tool_calls or []:
-                yield self.format_chunk({"chunk_type": "content_start", "data_type": "tool", "data": tool_call})
-                yield self.format_chunk({"chunk_type": "content_delta", "data_type": "tool", "data": tool_call})
-                yield self.format_chunk({"chunk_type": "content_stop", "data_type": "tool", "data": tool_call})
+                yield self.format_chunk(
+                    {
+                        "chunk_type": "content_start",
+                        "data_type": "tool",
+                        "data": tool_call,
+                    }
+                )
+                yield self.format_chunk(
+                    {
+                        "chunk_type": "content_delta",
+                        "data_type": "tool",
+                        "data": tool_call,
+                    }
+                )
+                yield self.format_chunk(
+                    {
+                        "chunk_type": "content_stop",
+                        "data_type": "tool",
+                        "data": tool_call,
+                    }
+                )
                 tool_requested = True
 
-            yield self.format_chunk({"chunk_type": "content_delta", "data_type": "text", "data": event.message.content})
+            yield self.format_chunk(
+                {
+                    "chunk_type": "content_delta",
+                    "data_type": "text",
+                    "data": event.message.content,
+                }
+            )
 
         yield self.format_chunk({"chunk_type": "content_stop", "data_type": "text"})
         # Guard the empty-stream case (e.g. cloud rate-limited mid-handshake):
@@ -82,7 +106,10 @@ class PooledOllamaModel(OllamaModel):
             yield self.format_chunk({"chunk_type": "message_stop", "data": "end_turn"})
             return
         yield self.format_chunk(
-            {"chunk_type": "message_stop", "data": "tool_use" if tool_requested else event.done_reason}
+            {
+                "chunk_type": "message_stop",
+                "data": "tool_use" if tool_requested else event.done_reason,
+            }
         )
         yield self.format_chunk({"chunk_type": "metadata", "data": event})
 

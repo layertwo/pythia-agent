@@ -120,9 +120,7 @@ class SessionsPlugin(Plugin):
                 db.query(SessionMessage)
                 .filter(
                     SessionMessage.session_id.in_(
-                        db.query(ConversationSession.id).filter(
-                            ConversationSession.user_id == self.user_id
-                        )
+                        db.query(ConversationSession.id).filter(ConversationSession.user_id == self.user_id)
                     ),
                     SessionMessage.content.ilike(pattern),
                 )
