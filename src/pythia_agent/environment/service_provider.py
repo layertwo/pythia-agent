@@ -13,10 +13,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from pythia_agent.agent import PythiaAgent
+from pythia_agent.dreams import DreamEngine
 from pythia_agent.config import Settings, load_settings
 from pythia_agent.db import Base
 from pythia_agent.memory import Mem0SessionManager
 from pythia_agent.plugins.agent_tools import AgentToolsPlugin
+from pythia_agent.plugins.dreams import DreamsPlugin
 from pythia_agent.plugins.goals import GoalsPlugin
 from pythia_agent.plugins.notifications import NotificationPlugin
 from pythia_agent.plugins.personas import PersonasPlugin
@@ -106,6 +108,14 @@ class ServiceProvider:
         return SafetyPlugin()
 
     @cached_property
+    def dreams_engine(self) -> DreamEngine:
+        return DreamEngine(
+            dreams_config=self.settings.dreams,
+            memory_config=self.settings.memory,
+            model_settings=self.settings,
+        )
+
+    @cached_property
     def shared_plugins(self) -> list:
         return [
             self.system_tools_plugin,
@@ -164,11 +174,20 @@ class ServiceProvider:
     def create_sessions_plugin(self, user_id: str) -> SessionsPlugin:
         return SessionsPlugin(user_id=user_id)
 
+    def create_dreams_plugin(self, user_id: str) -> DreamsPlugin | None:
+        if not self.settings.memory.enabled:
+            return None
+        return DreamsPlugin(engine=self.dreams_engine, user_id=user_id)
+
     def create_agent(self, user_id: str = "default") -> PythiaAgent:
+        per_user = [self.create_sessions_plugin(user_id)]
+        dreams_plugin = self.create_dreams_plugin(user_id)
+        if dreams_plugin is not None:
+            per_user.append(dreams_plugin)
         return PythiaAgent(
             model=self.model,
             system_prompt=self.settings.agent.system_prompt,
-            plugins=[*self.shared_plugins, self.create_sessions_plugin(user_id)],
+            plugins=[*self.shared_plugins, *per_user],
             session_manager=self.create_session_manager(user_id),
             conversation_manager=self.create_conversation_manager(),
             limits=self.limits,
@@ -184,9 +203,19 @@ class ServiceProvider:
     def start(self) -> None:
         self.init_schema()
         self.scheduler_plugin.start()
+        if self.settings.memory.enabled:
+            self.dreams_engine.start_cron()
 
     def shutdown(self) -> None:
         self.scheduler_plugin.stop()
+        # Always drain the dreams engine if it was constructed at any point
+        # during this provider's lifetime — `cached_property` won't have
+        # built it if no caller touched `dreams_engine`, in which case
+        # __dict__ won't contain it and we have nothing to drain. This is
+        # also robust to `memory.enabled` toggling between start and
+        # shutdown: if cron started, it must be stopped.
+        if "dreams_engine" in self.__dict__:
+            self.dreams_engine.shutdown()
         self.engine.dispose()
 
     def _handle_job(self, job) -> str:

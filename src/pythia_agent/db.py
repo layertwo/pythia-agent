@@ -84,6 +84,31 @@ class Goal(Base):
     )
 
 
+class Dream(Base):
+    """Tracks one memory consolidation dream for a user.
+
+    `memories_before` snapshots the full pre-dream memory set so the
+    `rollback_dream` tool can restore it; we keep the last N runs per user
+    (config-driven).
+    """
+
+    __tablename__ = "dreams"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, nullable=False, index=True)
+    started_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    completed_at = Column(DateTime(timezone=True))
+    status = Column(String, nullable=False, default="running")
+    trigger = Column(String, nullable=False, default="manual")  # "manual" | "cron"
+    instructions = Column(Text)
+    memories_before = Column(JSONB)  # list[{"id": str, "text": str}]
+    operations = Column(JSONB)       # raw DreamResult.operations list
+    count_before = Column(Integer)
+    count_after = Column(Integer)
+    guardrail_reason = Column(Text)
+    error = Column(Text)
+
+
 class Persona(Base):
     __tablename__ = "personas"
 

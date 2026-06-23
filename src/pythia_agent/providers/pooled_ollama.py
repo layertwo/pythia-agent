@@ -12,6 +12,7 @@ one client per loop and rebuild when the loop is gone.
 """
 
 import asyncio
+import weakref
 from collections.abc import AsyncGenerator
 from typing import Any, TypeVar
 
@@ -31,7 +32,14 @@ class PooledOllamaModel(OllamaModel):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._clients: dict[asyncio.AbstractEventLoop, ollama.AsyncClient] = {}
+        # WeakKeyDictionary: when a loop is garbage-collected (every
+        # `asyncio.run()` exit produces a closed, dereferenceable loop),
+        # its cached client entry drops too. A plain dict would hold the
+        # closed loop alive as a strong key forever — a slow leak under
+        # the scheduler / dreams pattern where each call spins a fresh loop.
+        self._clients: weakref.WeakKeyDictionary[
+            asyncio.AbstractEventLoop, ollama.AsyncClient
+        ] = weakref.WeakKeyDictionary()
 
     def _get_client(self) -> ollama.AsyncClient:
         loop = asyncio.get_running_loop()

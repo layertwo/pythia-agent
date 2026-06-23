@@ -115,6 +115,35 @@ class LimitsConfig(BaseModel):
         return built or None
 
 
+class DreamsConfig(BaseModel):
+    """Memory consolidation ("dreams") settings.
+
+    When enabled, a cron job periodically iterates every user that has
+    conversation activity, reads each user's recent sessions plus their
+    current memory store, and asks an LLM to consolidate duplicates,
+    resolve contradictions, and surface new insights — then atomically
+    replaces that user's memories with the consolidated set.
+
+    Auto-fire is gated by BOTH the cron schedule AND minimum activity since
+    the user's last dream — `min_hours_between_dreams` and
+    `min_sessions_between_dreams` prevent dreaming on a quiet user (wasted
+    LLM calls) or on a single long session split across days (cron fires
+    but nothing has changed for that user).
+    """
+
+    enabled: bool = False
+    cron: str = "0 3 * * *"           # 3 AM UTC daily — only fires when dual gate passes
+    max_sessions: int = 10            # recent sessions pulled when sessions are included
+    max_messages_per_session: int = 50
+    max_drop_ratio: float = 0.5       # skip swap if > this fraction dropped
+    max_rewrite_ratio: float = 0.7    # skip swap if > this fraction replaced
+    min_retention_ratio: float = 0.3  # skip swap if count_after/count_before < this
+    retain_runs: int = 7              # number of historical Dream snapshots kept per user
+    # Dual-gate trigger (only applies to cron-fired dreams, not on-demand):
+    min_hours_between_dreams: int = 24       # cron skips if last dream is newer than this
+    min_sessions_between_dreams: int = 5     # cron skips if fewer distinct sessions since last dream
+
+
 class ServerConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8080
@@ -159,6 +188,7 @@ def _make_settings_class(yaml_data: dict[str, Any]) -> type[BaseSettings]:
         memory: MemoryConfig = Field(default_factory=MemoryConfig)
         context: ContextConfig = Field(default_factory=ContextConfig)
         limits: LimitsConfig = Field(default_factory=LimitsConfig)
+        dreams: DreamsConfig = Field(default_factory=DreamsConfig)
         server: ServerConfig = Field(default_factory=ServerConfig)
 
         @classmethod
