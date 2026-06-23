@@ -47,7 +47,7 @@ jobs:
             arch: arm64
     runs-on: ${{ matrix.runner }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v4.1.0
@@ -74,7 +74,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Download amd64 image artifact
       uses: actions/download-artifact@v8
@@ -130,7 +130,7 @@ jobs:
             arch: arm64
     runs-on: ${{ matrix.runner }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v4.1.0
@@ -173,7 +173,7 @@ jobs:
       packages: write
       id-token: write
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Install cosign
       uses: sigstore/cosign-installer@v4.1.2
