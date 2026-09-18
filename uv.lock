@@ -767,9 +767,10 @@ wheels = [
 
 [[package]]
 name = "mem0ai"
-version = "2.0.4"
+version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "httpx" },
     { name = "openai" },
     { name = "posthog" },
     { name = "protobuf" },
@@ -778,9 +779,9 @@ dependencies = [
     { name = "qdrant-client" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0e/51/e22728c4b4e94e06f97464a3262b895ca67f62381d5cb34fe1c6f672c946/mem0ai-2.0.4.tar.gz", hash = "sha256:0cffdbdaa961aa4371c707e5f90f25961ae0cf170169abf6aaf6adba14c6bca1", size = 216092, upload-time = "2026-05-27T17:45:46.46Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/0a/afd8a260e133a985c7a3ee51fd2d1d71aa8ed9057677a03177276884f7ad/mem0ai-2.1.0.tar.gz", hash = "sha256:55c430900a902834ef1b5c678f05bad2d678e19d6f9cfd4ae139db904f572de0", size = 251336, upload-time = "2026-09-18T11:12:09.901Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/ab/46eac3d46c17427af579cb44ff1513b552d85b32998748f2c66248513955/mem0ai-2.0.4-py3-none-any.whl", hash = "sha256:920a39474bf4c2a5a7d4bb814e237aacd699c435d8e20db257c3b43568e7175e", size = 303753, upload-time = "2026-05-27T17:45:44.598Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/c6/7cf1ecd332d4ab1e66186e187bd5c02b0c07172e8429652201db7fff9697/mem0ai-2.1.0-py3-none-any.whl", hash = "sha256:6301bf474c2848d21da7482fc42af9a89ea75afd43513610dd615295ed3d9d13", size = 347022, upload-time = "2026-09-18T11:12:07.711Z" },
 ]
 
 [package.optional-dependencies]
@@ -1233,7 +1234,7 @@ requires-dist = [
     { name = "exa-py", marker = "extra == 'search'", specifier = "==2.14.0" },
     { name = "fastapi", specifier = "==0.138.0" },
     { name = "feedparser", specifier = "==6.0.12" },
-    { name = "mem0ai", extras = ["nlp"], specifier = "==2.0.4" },
+    { name = "mem0ai", extras = ["nlp"], specifier = "==2.1.0" },
     { name = "psycopg2-binary", specifier = "==2.9.12" },
     { name = "pydantic", specifier = "==2.13.4" },
     { name = "pydantic-settings", specifier = "==2.14.2" },
