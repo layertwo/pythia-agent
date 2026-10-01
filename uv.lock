@@ -1240,7 +1240,7 @@ requires-dist = [
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "requests", specifier = "==2.34.2" },
     { name = "sqlalchemy", specifier = "==2.0.51" },
-    { name = "strands-agents", extras = ["ollama"], specifier = "==1.44.0" },
+    { name = "strands-agents", extras = ["ollama"], specifier = "==1.57.2" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.49.0" },
 ]
 provides-extras = ["search"]
@@ -1684,12 +1684,13 @@ wheels = [
 
 [[package]]
 name = "strands-agents"
-version = "1.44.0"
+version = "1.57.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
     { name = "botocore" },
     { name = "docstring-parser" },
+    { name = "httpx" },
     { name = "jsonschema" },
     { name = "mcp" },
     { name = "opentelemetry-api" },
@@ -1700,9 +1701,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2e/4d/a1c8c0b870808877b9b82b9885294cddc7ec38fea5de5a941a80e11406b4/strands_agents-1.44.0.tar.gz", hash = "sha256:e876161bce6cc2a459356434746275be4e112cc1038a089adf3ee96e8a69b9d9", size = 1070256, upload-time = "2026-06-16T21:14:44.253Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/87/050fa17fb5d9115e96b7332bea61a4a46ed9eb6c788b9486e807789640e6/strands_agents-1.57.2.tar.gz", hash = "sha256:6df1e6617b81c07d258631ef6dcf5e4388a93b561729d3696cd44113f2c530d7", size = 1726882, upload-time = "2026-10-01T18:55:51.078Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/25/a01d4ab2ce9cb25c44ff84c692a38568d5b2f256b5b3b111fab30373978f/strands_agents-1.44.0-py3-none-any.whl", hash = "sha256:dfa59c7fb891f6079bc467ede12aeaefd2a2f455941267d60b9ddcdf716f8629", size = 568378, upload-time = "2026-06-16T21:14:42.294Z" },
+    { url = "https://files.pythonhosted.org/packages/df/40/1df02c89427ab165a95cda83149159e09b655846c1d44589cda8ba79ccbd/strands_agents-1.57.2-py3-none-any.whl", hash = "sha256:c0d4726e63cfbb75cbe381c40d76029aaefb7f29555476e8080f626376c9fe00", size = 866480, upload-time = "2026-10-01T18:55:49.154Z" },
 ]
 
 [package.optional-dependencies]
