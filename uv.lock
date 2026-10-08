@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 
 [[package]]
@@ -1240,7 +1240,7 @@ requires-dist = [
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "requests", specifier = "==2.34.2" },
     { name = "sqlalchemy", specifier = "==2.0.51" },
-    { name = "strands-agents", extras = ["ollama"], specifier = "==1.44.0" },
+    { name = "strands-agents", extras = ["ollama"], specifier = "==1.59.0" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.49.0" },
 ]
 provides-extras = ["search"]
@@ -1684,12 +1684,13 @@ wheels = [
 
 [[package]]
 name = "strands-agents"
-version = "1.44.0"
+version = "1.59.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
     { name = "botocore" },
     { name = "docstring-parser" },
+    { name = "httpx" },
     { name = "jsonschema" },
     { name = "mcp" },
     { name = "opentelemetry-api" },
@@ -1700,9 +1701,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2e/4d/a1c8c0b870808877b9b82b9885294cddc7ec38fea5de5a941a80e11406b4/strands_agents-1.44.0.tar.gz", hash = "sha256:e876161bce6cc2a459356434746275be4e112cc1038a089adf3ee96e8a69b9d9", size = 1070256, upload-time = "2026-06-16T21:14:44.253Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/bc/93aaaf27f135481cd22eb41430f7e919bde2771439c853f1e7fbf8b7c124/strands_agents-1.59.0.tar.gz", hash = "sha256:617eb2c925ab94542f03902435577917c106e46665a7196fa7e13790c20b2f55", size = 1752743, upload-time = "2026-10-08T13:40:25.282Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/25/a01d4ab2ce9cb25c44ff84c692a38568d5b2f256b5b3b111fab30373978f/strands_agents-1.44.0-py3-none-any.whl", hash = "sha256:dfa59c7fb891f6079bc467ede12aeaefd2a2f455941267d60b9ddcdf716f8629", size = 568378, upload-time = "2026-06-16T21:14:42.294Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/15/4d21704a1be7c628f5193f76070f42720f1dad2d80271e31c1f6af33bf8a/strands_agents-1.59.0-py3-none-any.whl", hash = "sha256:d1720c6cf3220bd632b3a1cb27e3907f1c5424d5bba8be830ee3e32b6cef5170", size = 880205, upload-time = "2026-10-08T13:40:22.858Z" },
 ]
 
 [package.optional-dependencies]
