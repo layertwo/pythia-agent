@@ -1,4 +1,4 @@
-FROM python:3.14-slim-trixie AS builder
+FROM python:3.15-slim-trixie AS builder
 
 # Copy uv binary from the official image (faster than `pip install uv`)
 COPY --from=ghcr.io/astral-sh/uv:0.11.17 /uv /uvx /bin/
@@ -26,7 +26,7 @@ COPY src/ ./src/
 RUN uv sync --frozen --no-dev --no-editable
 
 
-FROM python:3.14-slim-trixie AS runtime
+FROM python:3.15-slim-trixie AS runtime
 
 # OCI labels — picked up on per-arch images. GHCR's package page reads
 # org.opencontainers.image.description from the multi-arch index, set in
