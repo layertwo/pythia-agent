@@ -21,7 +21,7 @@ dependencies = [
     "psycopg2-binary==2.9.12",
     "requests==2.34.2",
     "feedparser==6.0.12",
-    "croniter==6.2.2",
+    "croniter==6.2.4",
 ]
 
 [project.optional-dependencies]
