@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 
 [[package]]
@@ -767,9 +767,10 @@ wheels = [
 
 [[package]]
 name = "mem0ai"
-version = "2.0.4"
+version = "2.0.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "httpx" },
     { name = "openai" },
     { name = "posthog" },
     { name = "protobuf" },
@@ -778,9 +779,9 @@ dependencies = [
     { name = "qdrant-client" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0e/51/e22728c4b4e94e06f97464a3262b895ca67f62381d5cb34fe1c6f672c946/mem0ai-2.0.4.tar.gz", hash = "sha256:0cffdbdaa961aa4371c707e5f90f25961ae0cf170169abf6aaf6adba14c6bca1", size = 216092, upload-time = "2026-05-27T17:45:46.46Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/42/00de525fc6a4ec4a6bddb180356e7a1587179cfb12e37953075bc7751328/mem0ai-2.0.18.tar.gz", hash = "sha256:7dfd23b119448fe631f2a20c025eeaee2bb2fb28b155e18b791486d2aa01896f", size = 248611, upload-time = "2026-08-11T18:58:00.363Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/ab/46eac3d46c17427af579cb44ff1513b552d85b32998748f2c66248513955/mem0ai-2.0.4-py3-none-any.whl", hash = "sha256:920a39474bf4c2a5a7d4bb814e237aacd699c435d8e20db257c3b43568e7175e", size = 303753, upload-time = "2026-05-27T17:45:44.598Z" },
+    { url = "https://files.pythonhosted.org/packages/09/eb/733a2c405f2890bbdbb32294f9fa9a4b248f0b7e91378821482caf02c5c4/mem0ai-2.0.18-py3-none-any.whl", hash = "sha256:2c20c78dec21c512e1daf6b7c2cacc306cb34eaab7dd24c2edc81b71386b0a10", size = 344386, upload-time = "2026-08-11T18:57:58.616Z" },
 ]
 
 [package.optional-dependencies]
@@ -1233,7 +1234,7 @@ requires-dist = [
     { name = "exa-py", marker = "extra == 'search'", specifier = "==2.14.0" },
     { name = "fastapi", specifier = "==0.138.0" },
     { name = "feedparser", specifier = "==6.0.12" },
-    { name = "mem0ai", extras = ["nlp"], specifier = "==2.0.4" },
+    { name = "mem0ai", extras = ["nlp"], specifier = "==2.0.18" },
     { name = "psycopg2-binary", specifier = "==2.9.12" },
     { name = "pydantic", specifier = "==2.13.4" },
     { name = "pydantic-settings", specifier = "==2.14.2" },
