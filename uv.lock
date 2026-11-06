@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 
 [[package]]
@@ -380,7 +380,7 @@ wheels = [
 
 [[package]]
 name = "exa-py"
-version = "2.14.0"
+version = "2.28.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpcore" },
@@ -391,9 +391,9 @@ dependencies = [
     { name = "requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/ef/22dd14f748ce4410df01997f452a39ace65bb7fc48d181e017d675a17f06/exa_py-2.14.0.tar.gz", hash = "sha256:19ea93e143b58753eb27b417e5a584a373913689449d3fa48562089a93777795", size = 62697, upload-time = "2026-06-16T13:54:19.989Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/a2/715db84134b2bbd4da26fb13080914819e572bbb211063bf5ad5c9693a48/exa_py-2.28.0.tar.gz", hash = "sha256:e835facb38fda3875837ecc875cae1f69de27f5782fa7f6be1f4fcd0b2933214", size = 117524, upload-time = "2026-11-06T21:02:37.666Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e0/3c/d1e7e9cdd5445c4e97875bc8ae8a82089b47ee66444df63653233f104740/exa_py-2.14.0-py3-none-any.whl", hash = "sha256:7704cdad1eb2d0eeb5830fbdcc2597c18f30995beb92f8c193954af99c239985", size = 85698, upload-time = "2026-06-16T13:54:23.344Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/a9/6115797dbbdac131748dc057b806165ab9ac2658b0295de769c9b546a110/exa_py-2.28.0-py3-none-any.whl", hash = "sha256:ae4a4140e1721872d2915a5ba93f7ccea80961013e965eb6bf8ea1896eb8f471", size = 144953, upload-time = "2026-11-06T21:02:36.435Z" },
 ]
 
 [[package]]
@@ -1230,7 +1230,7 @@ dev = [
 requires-dist = [
     { name = "croniter", specifier = "==6.2.2" },
     { name = "en-core-web-sm", url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" },
-    { name = "exa-py", marker = "extra == 'search'", specifier = "==2.14.0" },
+    { name = "exa-py", marker = "extra == 'search'", specifier = "==2.28.0" },
     { name = "fastapi", specifier = "==0.138.0" },
     { name = "feedparser", specifier = "==6.0.12" },
     { name = "mem0ai", extras = ["nlp"], specifier = "==2.0.4" },
